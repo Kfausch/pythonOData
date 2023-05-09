@@ -1,12 +1,13 @@
 import requests
 import json
+import matplotlib.pyplot as plt
 import pandas as pd
 from requests.auth import HTTPBasicAuth
 
 # Replace with your OData API URL
-odata_api_url = "https://server:port/servicetier/ODataV4/Company('companyname')/SalesInvoiceLines"
+odata_api_url = "ServerAddress:Port/ServiceTierName/ODataV4/Company('CompanyName')/SalesInvoiceLines"
 
-
+#Fuction to get API data
 def get_data_from_api(url, username, password):
     response = requests.get(url, auth=HTTPBasicAuth(username, password))
     if response.status_code == 200:
@@ -16,6 +17,10 @@ def get_data_from_api(url, username, password):
         print(f"Error fetching data from API: {response.status_code}")
         return None
 
+#Fuction to format Y axis of bar chart to show millions
+def millions(x, pos):
+    """The two arguments are the value and tick position."""
+    return f'${x*1e-6:1.1f}M'
 
 def main():
     # Replace with your API credentials
@@ -24,13 +29,23 @@ def main():
 
     data = get_data_from_api(odata_api_url, api_username, api_password)
     
-    #print dataFormat to see raw data
+    
+    #print dataFormat if you want to see raw data
     #dataFormat = json.dumps(data, indent=4)
 
-    #creating a DataFrame with Pandas, stepping into the values, then using the groupby function to aggregate Amount by Customer
+
     df = pd.DataFrame(data['value'])
-    sales_by_customer = df.groupby('Sell_to_Customer_No')['Amount'].sum()
-    print(sales_by_customer)
+    sales_by_customer = df.groupby('Sell_to_Customer_No')['Amount'].sum().plot(kind='bar')
+    sales_by_customer.yaxis.set_major_formatter(millions)
+    
+    # Uncomment this for loop to apply data labels to bar chart
+    # for i in sales_by_customer.containers:
+    #     sales_by_customer.bar_label(i)
+
+    plt.title('Sales Amount by Customer')
+    plt.xlabel("Customers")
+    plt.ylabel("Sales Amount")
+    plt.show()
 
 
 if __name__ == "__main__":
