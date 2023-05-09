@@ -1,0 +1,37 @@
+import requests
+import json
+import pandas as pd
+from requests.auth import HTTPBasicAuth
+
+# Replace with your OData API URL
+odata_api_url = "https://server:port/servicetier/ODataV4/Company('companyname')/SalesInvoiceLines"
+
+
+def get_data_from_api(url, username, password):
+    response = requests.get(url, auth=HTTPBasicAuth(username, password))
+    if response.status_code == 200:
+        data = json.loads(response.text)
+        return data
+    else:
+        print(f"Error fetching data from API: {response.status_code}")
+        return None
+
+
+def main():
+    # Replace with your API credentials
+    api_username = "username"
+    api_password = "password"
+
+    data = get_data_from_api(odata_api_url, api_username, api_password)
+    
+    #print dataFormat to see raw data
+    #dataFormat = json.dumps(data, indent=4)
+
+    #creating a DataFrame with Pandas, stepping into the values, then using the groupby function to aggregate Amount by Customer
+    df = pd.DataFrame(data['value'])
+    sales_by_customer = df.groupby('Sell_to_Customer_No')['Amount'].sum()
+    print(sales_by_customer)
+
+
+if __name__ == "__main__":
+    main()
